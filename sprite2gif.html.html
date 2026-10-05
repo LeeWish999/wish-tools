@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>精灵图→GIF工具</title>
+<style id="g2g-style">
+*{box-sizing:border-box}html,body{margin:0}
+body{background:#14151b;color:#e8e9f2;font:14px/1.65 system-ui,'Segoe UI','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:22px 18px 70px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:#8b90a8;font-size:12.5px;margin-bottom:16px}
+.sub b{color:#c9cce0}
+.card{background:#1b1c24;border:1px solid #2b2d3c;border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 12px;color:#c9cce0;font-weight:600}
+.drop{border:2px dashed #3a3d52;border-radius:12px;padding:26px 14px;text-align:center;cursor:pointer;transition:.15s;color:#9ba0b8}
+.drop:hover{border-color:#6f6a99;color:#c8cbe0}
+.drop.over{border-color:#8b7cf6;background:#20212e;color:#e8e9f2}
+.drop b{color:#cfd2e8}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{background:linear-gradient(135deg,#7c6cf0,#4f8dff);border:0;color:#fff;font-size:14px;font-weight:600;padding:10px 20px;border-radius:10px;cursor:pointer}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:#262838;border:1px solid #383b4f;color:#c9cce0;font-weight:500;font-size:12.5px;padding:8px 14px}
+.btn.mini{font-size:11.5px;padding:5px 10px;border-radius:8px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field>label{font-size:12px;color:#9ba0b8}
+.field input[type=number],.field select,.field input[type=text]{background:#22242f;border:1px solid #343748;border-radius:8px;color:#e8e9f2;padding:7px 9px;font-size:13px;width:100%}
+.field input[type=color]{background:#22242f;border:1px solid #343748;border-radius:8px;height:34px;padding:2px;cursor:pointer;width:100%}
+.field input[type=range]{width:100%;accent-color:#7c6cf0}
+.hud{font-size:12.5px;color:#8b90a8}
+.hud b{color:#b9bdd4;font-weight:600}
+.pvbox{background:#101117;border:1px solid #2b2d3c;border-radius:10px;padding:8px;display:flex;align-items:center;justify-content:center}
+canvas,img{image-rendering:pixelated}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:8px 2px}
+.thumb{flex:0 0 auto;background:repeating-conic-gradient(#33364a 0 25%,#262838 0 50%) 0 0/14px 14px;border-radius:8px;padding:6px;text-align:center}
+.thumb canvas{display:block;height:78px;width:auto;margin:0 auto 4px}
+.thumb span{font-size:10.5px;color:#8b90a8}
+.gsel{flex:0 0 auto;background:repeating-conic-gradient(#33364a 0 25%,#262838 0 50%) 0 0/14px 14px;border:2px solid #33364a;border-radius:8px;padding:5px;text-align:center;cursor:pointer}
+.gsel.on{border-color:#7c6cf0}
+.gsel canvas{display:block;margin:0 auto 3px;image-rendering:pixelated}
+.gsel span{font-size:10.5px;color:#b9bdd4}
+.chip{display:inline-block;background:#262838;border:1px solid #383b4f;color:#aab0cc;font-size:11.5px;padding:3px 10px;border-radius:99px;margin:0 6px 6px 0;cursor:pointer;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.on{background:#35306b;border-color:#7c6cf0;color:#eae7ff}
+.res{display:none;gap:18px;align-items:center;flex-wrap:wrap}
+.res.on{display:flex}
+.tag{display:inline-block;background:#262838;border:1px solid #383b4f;color:#aab0cc;font-size:11px;padding:2px 8px;border-radius:99px;margin:0 6px 6px 0}
+.sep{height:1px;background:#262838;margin:14px 0}
+.foot{color:#6f7488;font-size:11.5px;margin-top:18px;text-align:center}
+.foot a{color:#8f9bd6;text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.small{font-size:11.5px;color:#6f7488}
+.fileinput{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;left:-9999px;top:auto;border:0;padding:0;margin:0;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+label.btn{display:inline-block;text-align:center}
+
+.btn,.drop,.gsel,.chip{touch-action:manipulation}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎞️ 精灵图 → GIF 动画生成器</h1>
+  <div class="sub">支持单列／单行条带与多行×多列的“动画表”：<b>自动识别网格与帧数</b>；白底自动去背（<b>边缘漫水，保护衣服内部浅色</b>）。全程本地处理，图片不会被上传；手机可直接使用（微信里点不动？用「华为浏览器」打开本文件）。</div>
+
+  <div class="card">
+    <div class="drop" id="drop">
+      <div style="font-size:26px;margin-bottom:6px">🖼️</div>
+      <div><b>点击这里选择图片</b>（电脑上也可直接拖入，可多选）</div>
+      <div class="small" style="margin-top:5px">手机：点「📁 选择图片」选相册 · 电脑：拖入 / 粘贴 · 微信里打不开？右上角「···」用「华为浏览器」打开</div>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple="" class="fileinput">
+    <div class="row" style="margin-top:10px">
+      <label class="btn" id="btnPick" for="file">📁 选择图片</label><button class="btn ghost" id="btnSample">✨ 加载示例图（动画表）试试</button>
+      <button class="btn ghost" id="btnBatch" style="display:none">📦 批量：所有图片逐组导出 GIF</button>
+      <span class="hud" id="fileInfo">已载入：<b>sample</b> · 180×240 像素</span>
+    </div>
+    <div class="strip" id="chips" style="display:none;padding-top:8px"></div>
+  </div>
+
+  <div class="card" id="cardFrames" style="">
+    <h2>① 识别 &amp; 帧预览 <span style="font-weight:400;color:#6f7488;font-size:12px" id="detectInfo">· 识别为网格：4 行 × 3 列（默认每行一个动画，可切换按列）</span></h2>
+    <div class="row" style="margin-bottom:6px"><button class="btn ghost mini" id="btnRedetect">↻ 重新自动识别（按当前去背容差）</button></div>
+    <div id="groupWrap" style="">
+      <div class="small" style="margin:2px 0 6px;color:#9ba0b8">选择要生成 GIF 的那一组（点击缩略图切换）：</div>
+      <div class="strip" id="groupBox"><div class="gsel on"><canvas width="104" height="35"></canvas><span>第 1 行</span></div><div class="gsel"><canvas width="104" height="35"></canvas><span>第 2 行</span></div><div class="gsel"><canvas width="104" height="35"></canvas><span>第 3 行</span></div><div class="gsel"><canvas width="104" height="35"></canvas><span>第 4 行</span></div></div>
+      <div class="small" id="groupCap" style="color:#b9bdd4;margin:2px 0 8px">当前生成：第 1 行的动画（共 3 帧）</div>
+    </div>
+    <div class="strip" id="strip"><div class="thumb"><canvas width="28" height="45"></canvas><span>1</span></div><div class="thumb"><canvas width="28" height="45"></canvas><span>2</span></div><div class="thumb"><canvas width="28" height="45"></canvas><span>3</span></div></div>
+    <div class="sep"></div>
+    <h2>② 参数调整</h2>
+    <div class="row" id="presets" style="margin:-2px 0 10px">
+      <span class="small" style="margin-right:2px">快捷预设：</span>
+      <button class="btn ghost mini" data-preset="g43">3列×4行（RPG）</button>
+      <button class="btn ghost mini" data-preset="h3">横向3帧</button>
+      <button class="btn ghost mini" data-preset="v4">纵向4帧</button>
+      <button class="btn ghost mini" data-preset="g44">4列×4行</button>
+    </div>
+    <div class="grid">
+      <div class="field"><label>画面排列方式</label>
+        <select id="mode">
+          <option value="v">单列竖排（每帧一行）</option>
+          <option value="h">单行横排（每帧一列）</option>
+          <option value="grid">网格动画表（多行×多列）</option>
+        </select>
+      </div>
+      <div class="field" id="fieldN" style="display: none;"><label>帧数（这个动画共几帧）</label>
+        <input type="number" id="n" min="1" max="128" step="1" value="4">
+      </div>
+      <div class="field" id="fgR"><label>网格行数（几个动画）</label>
+        <input type="number" id="gRows" min="1" max="64" step="1" value="4">
+      </div>
+      <div class="field" id="fgC"><label>网格列数（每个动画几帧）</label>
+        <input type="number" id="gCols" min="1" max="64" step="1" value="3">
+      </div>
+      <div class="field" id="fgD"><label>动画方向</label>
+        <select id="gDir">
+          <option value="row">按行：每行一个动画（横向播放）</option>
+          <option value="col">按列：每列一个动画（纵向播放）</option>
+        </select>
+      </div>
+      <div class="field"><label>帧延时 <span id="delayOut" style="color:#b9bdd4">120ms ≈ 8.3 帧/秒</span></label>
+        <input type="range" id="delay" min="20" max="600" step="10" value="120">
+      </div>
+      <div class="field"><label>放大倍数（像素风一般 3~6 倍）</label>
+        <select id="scale">
+          <option value="1">1x 原始大小</option>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+          <option value="4" selected="">4x</option>
+          <option value="5">5x</option>
+          <option value="6">6x</option>
+          <option value="8">8x</option>
+        </select>
+      </div>
+      <div class="field"><label>背景处理</label>
+        <select id="bgMode">
+          <option value="flood">自动智能去背（边缘漫水，保护衣服内部）</option>
+          <option value="key">全图色键（镂空处也去，可能误伤浅色衣服）</option>
+          <option value="keep">保留原背景</option>
+          <option value="color">手动指定颜色（边缘漫水）</option>
+        </select>
+      </div>
+      <div class="field" id="fieldColor" style="display:none"><label>要去掉的颜色</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="field"><label>去背容差 <span id="thrOut" style="color:#b9bdd4">16</span></label>
+        <input type="range" id="thr" min="0" max="120" step="1" value="16">
+      </div>
+      <div class="field"><label>播放顺序</label>
+        <select id="order">
+          <option value="fwd">正序播放</option>
+          <option value="rev">倒序播放</option>
+          <option value="ping">往复播放（正放+倒放）</option>
+        </select>
+      </div>
+      <div class="field"><label>选项</label>
+        <label style="display:flex;gap:8px;align-items:center;color:#c9cce0"><input type="checkbox" id="crop" checked=""> 自动裁掉每帧空白边距</label>
+        <label style="display:flex;gap:8px;align-items:center;color:#c9cce0"><input type="checkbox" id="loop" checked=""> 无限循环播放</label>
+        <label style="display:flex;gap:8px;align-items:center;color:#c9cce0"><input type="checkbox" id="cleanup" checked=""> 清除封闭小孔（镂空处残留的背景色）</label>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="row"><button class="btn" id="btnGo">🎬 生成 GIF 动画</button><span class="hud" id="goInfo">✅ 已生成</span></div>
+  </div>
+
+  <div class="card" id="cardRes" style="">
+    <h2>③ 完成！预览 &amp; 下载</h2>
+    <div class="res on">
+      <div class="pvbox" style="padding:14px"><img id="gifImg" alt="gif预览" style="max-width:230px;max-height:230px;display:block;background:repeating-conic-gradient(#2a2c3c 0 25%,#20222e 0 50%) 0 0/14px 14px" src="blob:https://example.com/1a272bf5-36e5-42a0-bda1-91e236e31c59"></div>
+      <div style="flex:1;min-width:230px">
+        <div id="resTags" style="margin-bottom:10px"><span class="tag">第 1 行 / 共 4 组</span><span class="tag">112×180px</span><span class="tag">3 帧</span><span class="tag">120ms/帧</span><span class="tag">≈8.3 帧/秒</span><span class="tag">9.7 KB</span><span class="tag">无限循环</span><span class="tag">背景已去</span></div>
+        <div class="row">
+          <button class="btn" id="btnDl">⬇️ 下载 GIF</button>
+          <button class="btn ghost" id="btnAll" style="">⬇️ 下载全部 4 个 GIF（每行一个）</button>
+        </div>
+        <div class="small" style="margin-top:10px">想换另一行生成？回到上面 ① 区点击其它缩略图，再点生成即可。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="cardHelp">
+  <details>
+    <summary style="cursor:pointer;color:#c9cce0;font-weight:600;font-size:14px">📖 使用说明（点开查看）</summary>
+    <div class="small" style="line-height:1.95;color:#aab0cc;margin-top:10px">
+      <b style="color:#c9cce0">① 三步上手：</b>拖入图片（或点击选择 / Ctrl+V 粘贴）→ 看预览并点缩略图选择动作 → 点「🎬 生成 GIF」再下载。<br>
+      <b style="color:#c9cce0">② 一张图多个动作：</b>识别为网格后，点行（列）缩略图切换；「下载全部」一键导出每个动作。<br>
+      <b style="color:#c9cce0">③ 多张图一起处理：</b>一次拖入多张图片，点顶部「📦 批量」按钮逐个导出。<br>
+      <b style="color:#c9cce0">④ 常用调整：</b>动作太快/太慢→调「帧延时」；小图模糊→「放大倍数」4~6x；背景默认「智能去背」自动抠透明底。<br>
+      <b style="color:#c9cce0">⑤ 识别不对？</b>试试「快捷预设」（如 3列×4行），或手动修改行数/列数/帧数，看①区预览核对。<br>
+      <b style="color:#c9cce0">⑥ 隐私：</b>全程本机处理，图片不上传、可离线使用。<br>
+      <b style="color:#c9cce0">⑦ 手机使用：</b>点「📁 选择图片」从相册选图即可。<br><b style="color:#c9cce0">华为/鸿蒙手机：</b>若在微信里点不动→右上角「···」→用「华为浏览器」打开；或先把文件存到「文件管理→下载」目录再用浏览器打开（如遇页面异常，可把文件名改成英文如 sprite2gif.html 再试）。选了大照片请等几秒（会自动压缩，属正常）。
+    </div>
+  </details>
+</div><div id="jsWarn" class="card" style="display: none; border-color: rgb(122, 59, 59); background: rgb(36, 26, 26); color: rgb(232, 176, 176); font-size: 12.5px;">⚠ 页面脚本未能正常加载：可能是浏览器版本过旧或 JavaScript 被拦截。请尝试用 Chrome / Edge / Safari 打开本文件；若仍不行，请把手机型号与浏览器名称告诉工具作者。</div><div class="foot">所有处理都在本机浏览器完成 · <a href="#" id="lnkExport">导出此工具为单文件网页（离线可用）</a></div>
+</div>
+<script id="gif-script" type="module">
+var X={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function F(t=256){let e=0,s=new Uint8Array(t);return{get buffer(){return s.buffer},reset(){e=0},bytesView(){return s.subarray(0,e)},bytes(){return s.slice(0,e)},writeByte(r){n(e+1),s[e]=r,e++},writeBytes(r,o=0,i=r.length){n(e+i);for(let c=0;c<i;c++)s[e++]=r[c+o]},writeBytesView(r,o=0,i=r.byteLength){n(e+i),s.set(r.subarray(o,o+i),e),e+=i}};function n(r){var o=s.length;if(o>=r)return;var i=1024*1024;r=Math.max(r,o*(o<i?2:1.125)>>>0),o!=0&&(r=Math.max(r,256));let c=s;s=new Uint8Array(r),e>0&&s.set(c.subarray(0,e),0)}}var O=12,J=5003,lt=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function at(t,e,s,n,r=F(512),o=new Uint8Array(256),i=new Int32Array(J),c=new Int32Array(J)){let x=i.length,a=Math.max(2,n);o.fill(0),c.fill(0),i.fill(-1);let l=0,f=0,g=a+1,h=g,b=!1,w=h,_=(1<<w)-1,u=1<<g-1,k=u+1,B=u+2,p=0,A=s[0],z=0;for(let y=x;y<65536;y*=2)++z;z=8-z,r.writeByte(a),I(u);let d=s.length;for(let y=1;y<d;y++){t:{let m=s[y],v=(m<<O)+A,M=m<<z^A;if(i[M]===v){A=c[M];break t}let V=M===0?1:x-M;for(;i[M]>=0;)if(M-=V,M<0&&(M+=x),i[M]===v){A=c[M];break t}I(A),A=m,B<1<<O?(c[M]=B++,i[M]=v):(i.fill(-1),B=u+2,b=!0,I(u))}}return I(A),I(k),r.writeByte(0),r.bytesView();function I(y){for(l&=lt[f],f>0?l|=y<<f:l=y,f+=w;f>=8;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;if((B>_||b)&&(b?(w=h,_=(1<<w)-1,b=!1):(++w,_=w===O?1<<w:(1<<w)-1)),y==k){for(;f>0;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;p>0&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0)}}}var $=at;function D(t,e,s){return t<<8&63488|e<<2&992|s>>3}function G(t,e,s,n){return t>>4|e&240|(s&240)<<4|(n&240)<<8}function j(t,e,s){return t>>4<<8|e&240|s>>4}function R(t,e,s){return t<e?e:t>s?s:t}function T(t){return t*t}function tt(t,e,s){var n=0,r=1e100;let o=t[e],i=o.cnt,c=o.ac,x=o.rc,a=o.gc,l=o.bc;for(var f=o.fw;f!=0;f=t[f].fw){let h=t[f],b=h.cnt,w=i*b/(i+b);if(!(w>=r)){var g=0;s&&(g+=w*T(h.ac-c),g>=r)||(g+=w*T(h.rc-x),!(g>=r)&&(g+=w*T(h.gc-a),!(g>=r)&&(g+=w*T(h.bc-l),!(g>=r)&&(r=g,n=f))))}}o.err=r,o.nn=n}function Q(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function ut(t,e){let s=e==="rgb444"?4096:65536,n=new Array(s),r=t.length;if(e==="rgba4444")for(let o=0;o<r;++o){let i=t[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255,f=G(l,a,x,c),g=f in n?n[f]:n[f]=Q();g.rc+=l,g.gc+=a,g.bc+=x,g.ac+=c,g.cnt++}else if(e==="rgb444")for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=j(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}else for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=D(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}return n}function H(t,e,s={}){let{format:n="rgb565",clearAlpha:r=!0,clearAlphaColor:o=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=s;if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");let x=new Uint32Array(t.buffer),a=s.useSqrt!==!1,l=n==="rgba4444",f=ut(x,n),g=f.length,h=g-1,b=new Uint32Array(g+1);for(var w=0,u=0;u<g;++u){let C=f[u];if(C!=null){var _=1/C.cnt;l&&(C.ac*=_),C.rc*=_,C.gc*=_,C.bc*=_,f[w++]=C}}T(e)/w<.022&&(a=!1);for(var u=0;u<w-1;++u)f[u].fw=u+1,f[u+1].bk=u,a&&(f[u].cnt=Math.sqrt(f[u].cnt));a&&(f[u].cnt=Math.sqrt(f[u].cnt));var k,B,p;for(u=0;u<w;++u){tt(f,u,!1);var A=f[u].err;for(B=++b[0];B>1&&(p=B>>1,!(f[k=b[p]].err<=A));B=p)b[B]=k;b[B]=u}var z=w-e;for(u=0;u<z;){for(var d;;){var I=b[1];if(d=f[I],d.tm>=d.mtm&&f[d.nn].mtm<=d.tm)break;d.mtm==h?I=b[1]=b[b[0]--]:(tt(f,I,!1),d.tm=u);var A=f[I].err;for(B=1;(p=B+B)<=b[0]&&(p<b[0]&&f[b[p]].err>f[b[p+1]].err&&p++,!(A<=f[k=b[p]].err));B=p)b[B]=k;b[B]=I}var y=f[d.nn],m=d.cnt,v=y.cnt,_=1/(m+v);l&&(d.ac=_*(m*d.ac+v*y.ac)),d.rc=_*(m*d.rc+v*y.rc),d.gc=_*(m*d.gc+v*y.gc),d.bc=_*(m*d.bc+v*y.bc),d.cnt+=y.cnt,d.mtm=++u,f[y.bk].fw=y.fw,f[y.fw].bk=y.bk,y.mtm=h}let M=[];var V=0;for(u=0;;++V){let L=R(Math.round(f[u].rc),0,255),C=R(Math.round(f[u].gc),0,255),Y=R(Math.round(f[u].bc),0,255),E=255;if(l){if(E=R(Math.round(f[u].ac),0,255),c){let st=typeof c=="number"?c:127;E=E<=st?0:255}r&&E<=i&&(L=C=Y=o,E=0)}let K=l?[L,C,Y,E]:[L,C,Y];if(xt(M,K)||M.push(K),(u=f[u].fw)==0)break}return M}function xt(t,e){for(let s=0;s<t.length;s++){let n=t[s],r=n[0]===e[0]&&n[1]===e[1]&&n[2]===e[2],o=n.length>=4&&e.length>=4?n[3]===e[3]:!0;if(r&&o)return!0}return!1}function U(t,e){var s=0,n;for(n=0;n<t.length;n++){let r=t[n]-e[n];s+=r*r}return s}function P(t,e){return e>1?Math.round(t/e)*e:t}function et(t,{roundRGB:e=5,roundAlpha:s=10,oneBitAlpha:n=null}={}){let r=new Uint32Array(t.buffer);for(let o=0;o<r.length;o++){let i=r[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255;if(c=P(c,s),n){let f=typeof n=="number"?n:127;c=c<=f?0:255}l=P(l,e),a=P(a,e),x=P(x,e),r[o]=c<<24|x<<16|a<<8|l<<0}}function nt(t,e,s="rgb565"){if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(e.length>256)throw new Error("applyPalette() only works with 256 colors or less");let n=new Uint32Array(t.buffer),r=n.length,o=s==="rgb444"?4096:65536,i=new Uint8Array(r),c=new Array(o),x=s==="rgba4444";if(s==="rgba4444")for(let a=0;a<r;a++){let l=n[a],f=l>>24&255,g=l>>16&255,h=l>>8&255,b=l&255,w=G(b,h,g,f),_=w in c?c[w]:c[w]=gt(b,h,g,f,e);i[a]=_}else{let a=s==="rgb444"?j:D;for(let l=0;l<r;l++){let f=n[l],g=f>>16&255,h=f>>8&255,b=f&255,w=a(b,h,g),_=w in c?c[w]:c[w]=bt(b,h,g,e);i[l]=_}}return i}function gt(t,e,s,n,r){let o=0,i=1e100;for(let c=0;c<r.length;c++){let x=r[c],a=x[3],l=q(a-n);if(l>i)continue;let f=x[0];if(l+=q(f-t),l>i)continue;let g=x[1];if(l+=q(g-e),l>i)continue;let h=x[2];l+=q(h-s),!(l>i)&&(i=l,o=c)}return o}function bt(t,e,s,n){let r=0,o=1e100;for(let i=0;i<n.length;i++){let c=n[i],x=c[0],a=q(x-t);if(a>o)continue;let l=c[1];if(a+=q(l-e),a>o)continue;let f=c[2];a+=q(f-s),!(a>o)&&(o=a,r=i)}return r}function rt(t,e,s=5){if(!t.length||!e.length)return;let n=t.map(i=>i.slice(0,3)),r=s*s,o=t[0].length;for(let i=0;i<e.length;i++){let c=e[i];c.length<o?c=[c[0],c[1],c[2],255]:c.length>o?c=c.slice(0,3):c=c.slice();let x=N(n,c.slice(0,3),U),a=x[0],l=x[1];l>0&&l<=r&&(t[a]=c)}}function q(t){return t*t}function W(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return r}function N(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return[r,n]}function ot(t,e,s=U){return t[W(t,e,s)]}function ct(t={}){let{initialCapacity:e=4096,auto:s=!0}=t,n=F(e),r=5003,o=new Uint8Array(256),i=new Int32Array(r),c=new Int32Array(r),x=!1;return{reset(){n.reset(),x=!1},finish(){n.writeByte(X.trailer)},bytes(){return n.bytes()},bytesView(){return n.bytesView()},get buffer(){return n.buffer},get stream(){return n},writeHeader:a,writeFrame(l,f,g,h={}){let{transparent:b=!1,transparentIndex:w=0,delay:_=0,palette:u=null,repeat:k=0,colorDepth:B=8,dispose:p=-1}=h,A=!1;if(s?x||(A=!0,a(),x=!0):A=Boolean(h.first),f=Math.max(0,Math.floor(f)),g=Math.max(0,Math.floor(g)),A){if(!u)throw new Error("First frame must include a { palette } option");pt(n,f,g,u,B),it(n,u),k>=0&&dt(n,k)}let z=Math.round(_/10);wt(n,p,z,b,w);let d=Boolean(u)&&!A;ht(n,f,g,d?u:null),d&&it(n,u),yt(n,l,f,g,B,o,i,c)}};function a(){ft(n,"GIF89a")}}function wt(t,e,s,n,r){t.writeByte(33),t.writeByte(249),t.writeByte(4),r<0&&(r=0,n=!1);var o,i;n?(o=1,i=2):(o=0,i=0),e>=0&&(i=e&7),i<<=2;let c=0;t.writeByte(0|i|c|o),S(t,s),t.writeByte(r||0),t.writeByte(0)}function pt(t,e,s,n,r=8){let o=1,i=0,c=Z(n.length)-1,x=o<<7|r-1<<4|i<<3|c,a=0,l=0;S(t,e),S(t,s),t.writeBytes([x,a,l])}function dt(t,e){t.writeByte(33),t.writeByte(255),t.writeByte(11),ft(t,"NETSCAPE2.0"),t.writeByte(3),t.writeByte(1),S(t,e),t.writeByte(0)}function it(t,e){let s=1<<Z(e.length);for(let n=0;n<s;n++){let r=[0,0,0];n<e.length&&(r=e[n]),t.writeByte(r[0]),t.writeByte(r[1]),t.writeByte(r[2])}}function ht(t,e,s,n){if(t.writeByte(44),S(t,0),S(t,0),S(t,e),S(t,s),n){let r=0,o=0,i=Z(n.length)-1;t.writeByte(128|r|o|0|i)}else t.writeByte(0)}function yt(t,e,s,n,r=8,o,i,c){$(s,n,e,r,t,o,i,c)}function S(t,e){t.writeByte(e&255),t.writeByte(e>>8&255)}function ft(t,e){for(var s=0;s<e.length;s++)t.writeByte(e.charCodeAt(s))}function Z(t){return Math.max(Math.ceil(Math.log2(t)),1)}var Bt=ct;export{ct as GIFEncoder,nt as applyPalette,Bt as default,ot as nearestColor,W as nearestColorIndex,N as nearestColorIndexWithDistance,et as prequantize,H as quantize,rt as snapColorsToPalette};
+;window.__gifenc={GIFEncoder:ct,applyPalette:nt,quantize:H,default:Bt};
+</script>
+<script id="boot">window.__exportData=(function(){var st=document.getElementById("g2g-style"),wr=document.querySelector(".wrap"),gs=document.getElementById("gif-script");return{css:st?st.textContent:"",body:wr?wr.outerHTML:"",gif:gs?gs.textContent:"",get app(){var ap=document.getElementById("app-script");return ap?ap.textContent:"";}};})();</script>
+<script id="app-script">
+var $=function(id){return document.getElementById(id)};
+var state={img:null,name:'animation',mode:'grid',gRows:4,gCols:3,gDir:'row',gIdx:0,n:4,delay:120,scale:4,bgMode:'flood',bgColor:'#ffffff',thr:16,crop:true,loop:true,order:'fwd',cleanup:true};
+var G=null,lastBlob=null,lastUrl=null,files=[],curFile=0;
+var LF=String.fromCharCode(10);
+var cache={img:null,thr:null,cleanup:null,data:null,W:0,H:0,mask:null,bgi:null};
+
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function waitG(){return new Promise(function(res){if(window.__gifenc){res(window.__gifenc);return;}var t=0;var iv=setInterval(function(){if(window.__gifenc){clearInterval(iv);res(window.__gifenc);}else if((t+=60)>18000){clearInterval(iv);res(null);}},60);});}
+async function ensureG(){if(G)return G;var g=await waitG();if(!g){g=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/+esm');}G=g;return G;}
+function loadImageFromURL(u){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error('图片加载失败'))};im.src=u;});}
+function getPixels(src){var w=src.naturalWidth||src.width,h=src.naturalHeight||src.height;var c=document.createElement('canvas');c.width=w;c.height=h;var ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(src,0,0);return {data:ctx.getImageData(0,0,w,h).data,w:w,h:h};}
+function detectBorder(data,w,h){var counts=new Map();var add=function(i){var a=data[i+3];var key=a<16?'t':((data[i]<<16)|(data[i+1]<<8)|data[i+2]);counts.set(key,(counts.get(key)||0)+1);};
+for(var yy=0;yy<Math.min(2,h);yy++)for(var x=0;x<w;x++){add((yy*w+x)*4);add(((h-1-yy)*w+x)*4);}
+for(var xx=0;xx<Math.min(2,w);xx++)for(var y=0;y<h;y++){add((y*w+xx)*4);add((y*w+w-1-xx)*4);}
+var best=null,bestN=-1;counts.forEach(function(v,k){if(v>bestN){bestN=v;best=k;}});
+return best==='t'?{transparent:true,color:null,count:bestN}:{transparent:false,color:best,count:bestN};}
+function hexToInt(s){s=String(s||'').trim();if(s.charAt(0)==='#')s=s.slice(1);if(s.length===3)s=s[0]+s[0]+s[1]+s[1]+s[2]+s[2];var v=parseInt(s,16);return isNaN(v)?0xffffff:v;}
+function orderIdx(k,order){var a=[],i;if(k<1)return [0];if(order==='rev'){for(i=k-1;i>=0;i--)a.push(i);return a;}if(order==='ping'){for(i=0;i<k;i++)a.push(i);for(i=k-2;i>=1;i--)a.push(i);return a;}for(i=0;i<k;i++)a.push(i);return a;}
+
+function floodMask(data,W,H,colorInt,tol){
+var mask=new Uint8Array(W*H);
+var t2=tol*tol;var cr=(colorInt>>16)&255,cg=(colorInt>>8)&255,cb=colorInt&255;
+function isNear(id){var i4=id*4;var a=data[i4+3];if(a<16)return true;var dr=data[i4]-cr,dg=data[i4+1]-cg,db=data[i4+2]-cb;return (dr*dr+dg*dg+db*db)<=t2;}
+var stack=new Int32Array(W*H);var sp=0;
+function push(px,py){if(px<0||py<0||px>=W||py>=H)return;var id=py*W+px;if(mask[id]===1)return;if(isNear(id)){mask[id]=1;stack[sp++]=id;}}
+var xx2,yy2;
+for(xx2=0;xx2<W;xx2++){push(xx2,0);push(xx2,H-1);}
+for(yy2=0;yy2<H;yy2++){push(0,yy2);push(W-1,yy2);}
+while(sp>0){var id=stack[--sp];var px3=id%W;var py3=(id-px3)/W;push(px3+1,py3);push(px3-1,py3);push(px3,py3+1);push(px3,py3-1);}
+return mask;
+}
+function applyCleanup(mask0,data,W,H,colorInt,tol){
+var mask=new Uint8Array(mask0);
+var t2=tol*tol;var cr=(colorInt>>16)&255,cg=(colorInt>>8)&255,cb=colorInt&255;
+function isNear(id){var i4=id*4;var a=data[i4+3];if(a<16)return true;var dr=data[i4]-cr,dg=data[i4+1]-cg,db=data[i4+2]-cb;return (dr*dr+dg*dg+db*db)<=t2;}
+var minPx=Math.max(48,Math.min(400,Math.floor(W*H*0.002)));
+var stack=new Int32Array(W*H);var sp=0;
+var comp=[];
+for(var s=0;s<W*H;s++){
+if(mask[s]!==0)continue;
+if(!isNear(s))continue;
+comp.length=0;mask[s]=2;stack[sp++]=s;
+while(sp>0){var idc=stack[--sp];comp.push(idc);var pxc=idc%W;var pyc=(idc-pxc)/W;
+if(pxc>0){var ia=idc-1;if(mask[ia]===0&&isNear(ia)){mask[ia]=2;stack[sp++]=ia;}}
+if(pxc<W-1){var ib=idc+1;if(mask[ib]===0&&isNear(ib)){mask[ib]=2;stack[sp++]=ib;}}
+if(pyc>0){var ic=idc-W;if(mask[ic]===0&&isNear(ic)){mask[ic]=2;stack[sp++]=ic;}}
+if(pyc<H-1){var idn=idc+W;if(mask[idn]===0&&isNear(idn)){mask[idn]=2;stack[sp++]=idn;}}
+}
+if(comp.length<=minPx){for(var ci=0;ci<comp.length;ci++)mask[comp[ci]]=1;}
+else{for(var cj=0;cj<comp.length;cj++)mask[comp[cj]]=0;}
+}
+return mask;
+}
+function getAnalysis(){
+if(cache.img===state.img&&cache.thr===state.thr&&cache.cleanup===state.cleanup&&cache.mask)return cache;
+var px=getPixels(state.img);var data=px.data,W=px.w,H=px.h;
+var bgi=detectBorder(data,W,H);
+var mask,maskDet;
+if(bgi.transparent){maskDet=new Uint8Array(W*H);for(var p=0,q=0;p<data.length;p+=4,q++){maskDet[q]=data[p+3]<16?1:0;}mask=maskDet;}
+else{maskDet=floodMask(data,W,H,bgi.color,state.thr);mask=state.cleanup?applyCleanup(maskDet,data,W,H,bgi.color,state.thr):maskDet;}
+cache={img:state.img,thr:state.thr,cleanup:state.cleanup,data:data,W:W,H:H,mask:mask,maskDet:maskDet,bgi:bgi};
+return cache;
+}function countsRow(mask,W,H){var counts=new Uint32Array(H),y,x,base,id,c;for(y=0;y<H;y++){base=y*W;c=0;for(x=0;x<W;x++){id=base+x;if(mask[id]!==1)c++;}counts[y]=c;}return counts;}
+function countsCol(mask,W,H){var counts=new Uint32Array(W),x,y,id,c;for(x=0;x<W;x++){c=0;for(y=0;y<H;y++){id=y*W+x;if(mask[id]!==1)c++;}counts[x]=c;}return counts;}
+function strengthRow(mask,W,H){var st=new Uint32Array(H),y,x,id,run;for(y=0;y<H;y++){run=0;st[y]=0;for(x=0;x<W;x++){id=y*W+x;if(mask[id]!==1){run++;if(run>st[y])st[y]=run;}else{run=0;}}}return st;}
+function strengthCol(mask,W,H){var st=new Uint32Array(W),x,y,id,run;for(x=0;x<W;x++){run=0;st[x]=0;for(y=0;y<H;y++){id=y*W+x;if(mask[id]!==1){run++;if(run>st[x])st[x]=run;}else{run=0;}}}return st;}
+function runPixels(counts,a,b){var s=0;for(var i=a;i<b;i++)s+=counts[i];return s;}
+function runsFromFlags(flags,len,maxGap){var runs=[],j,s,e,gap,i;i=0;while(i<len){if(!flags[i]){i++;continue;}s=i;e=i;gap=0;j=i+1;while(j<len){if(flags[j]){e=j;gap=0;}else{gap++;if(gap>maxGap)break;}j++;}runs.push([s,e+1]);i=e+1;}return runs;}
+function segOnce(counts,strength,len,minRun,maxGap){var flags=new Uint8Array(len),i,maxC=0,minH,minPix;for(i=0;i<len;i++){if(counts[i]>maxC)maxC=counts[i];}for(i=0;i<len;i++){flags[i]=strength[i]>=minRun?1:0;}minH=Math.max(4,Math.floor(len*0.01));minPix=Math.max(10,maxC*0.04);var rr=runsFromFlags(flags,len,maxGap);var out=[];for(var r=0;r<rr.length;r++){var h=rr[r][1]-rr[r][0];if(h<minH)continue;var px=runPixels(counts,rr[r][0],rr[r][1]);if(px<minPix)continue;out.push(rr[r]);}return out;}
+function refineRuns(runs,strength,minWeakLen){
+var pass=0,changed=true;
+while(changed&&pass<8&&runs.length<40){
+changed=false;pass++;
+var idx=-1,bestH=0,k;
+for(k=0;k<runs.length;k++){var h=runs[k][1]-runs[k][0];if(h>bestH){bestH=h;idx=k;}}
+if(idx<0)break;
+var r=runs[idx];var hh=r[1]-r[0];
+if(hh<24)break;
+var maxS=0;
+for(var t=r[0];t<r[1];t++)if(strength[t]>maxS)maxS=strength[t];
+if(maxS<4)break;
+var weakThr=Math.max(2,Math.round(maxS*0.22));
+var lo=r[0]+Math.floor(hh*0.15),hi=r[1]-Math.floor(hh*0.15);
+var cur=0,bestLen=0,bestMid=-1;
+for(var t2=lo;t2<hi;t2++){
+if(strength[t2]<weakThr){cur++;if(cur>bestLen){bestLen=cur;bestMid=t2-Math.floor(cur/2);}}
+else cur=0;
+}
+if(bestLen>=minWeakLen&&bestMid>r[0]&&bestMid<r[1]&&(bestMid-r[0])>=10&&(r[1]-bestMid)>=10){
+runs=runs.slice(0,idx).concat([[r[0],bestMid],[bestMid,r[1]]]).concat(runs.slice(idx+1));
+changed=true;
+}else{break;}
+}
+return runs;
+}
+function detectRuns(counts,strength,len){
+var primary=segOnce(counts,strength,len,4,2);
+if(primary.length>=2&&primary.length<=40)return refineRuns(primary,strength,2);
+var opts=[[4,1],[3,2],[3,1],[2,2],[2,1],[1,1],[1,0]];
+for(var a=0;a<opts.length;a++){var r2=segOnce(counts,strength,len,opts[a][0],opts[a][1]);if(r2.length>=2&&r2.length<=40)return refineRuns(r2,strength,2);}
+if(primary.length===1){var r3=refineRuns(primary,strength,2);if(r3.length>=2)return r3;}
+return primary;
+}
+function gridOf(st,W,H){if(st.mode==='grid')return {R:Math.max(1,st.gRows|0),C:Math.max(1,st.gCols|0),dir:st.gDir==='col'?'col':'row',idx:Math.max(0,st.gIdx|0)};if(st.mode==='h')return {R:1,C:Math.max(1,st.n|0),dir:'row',idx:0};return {R:Math.max(1,st.n|0),C:1,dir:'col',idx:0};}
+function cellsOf(g,W,H){var cw=Math.floor(W/g.C),ch=Math.floor(H/g.R);if(cw<1||ch<1)return null;var cells=[],i;if(g.dir==='row'){if(g.idx>=g.R)return null;for(i=0;i<g.C;i++)cells.push({x:i*cw,y:g.idx*ch,w:cw,h:ch});}else{if(g.idx>=g.C)return null;for(i=0;i<g.R;i++)cells.push({x:g.idx*cw,y:i*ch,w:cw,h:ch});}return {cells:cells,cw:cw,ch:ch};}
+function groupCountOf(st,W,H){var g=gridOf(st,W,H);return g.dir==='row'?g.R:g.C;}
+function measureCropMask(mask,W,H,cells){var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+for(var ci=0;ci<cells.length;ci++){var cell=cells[ci];
+for(var y=0;y<cell.h;y++){var gy=cell.y+y;for(var x=0;x<cell.w;x++){var id=gy*W+cell.x+x;if(mask[id]===1)continue;
+if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}}
+if(!isFinite(x0)||x1<x0)return {x0:0,y0:0,x1:cells[0].w,y1:cells[0].h};
+return {x0:x0,y0:y0,x1:x1+1,y1:y1+1};}
+function optsFromState(){return {mode:state.mode,n:state.n,gRows:state.gRows,gCols:state.gCols,gDir:state.gDir,gIdx:state.gIdx,delay:state.delay,scale:state.scale,bgMode:state.bgMode,bgColor:state.bgColor,thr:state.thr,crop:state.crop,loop:state.loop,order:state.order,cleanup:state.cleanup};}
+
+async function buildGif(img,o,groupIdx){
+var g=await ensureG();var GG=g.GIFEncoder,quant=g.quantize,applyP=g.applyPalette;
+var an=getAnalysis();var W=an.W,H=an.H,mask=an.mask,bgi=an.bgi,data=an.data;
+var st={mode:o.mode,n:o.n,gRows:o.gRows,gCols:o.gCols,gDir:o.gDir,gIdx:(groupIdx==null?o.gIdx:groupIdx)};
+var gg=gridOf(st,W,H);
+var maxG=gg.dir==='row'?gg.R:gg.C;
+if(gg.idx<0||gg.idx>=maxG)throw new Error('组序号超出范围');
+var co=cellsOf(gg,W,H);
+if(!co)throw new Error('行列数太大，无法分割：请减小行数或列数');
+var cells=co.cells;
+if(cells.length>480)throw new Error('这个组帧数太多（'+cells.length+' 帧）');
+var rect={x0:0,y0:0,x1:co.cw,y1:co.ch};
+if(o.crop!==false){var m=measureCropMask(mask,W,H,cells);if(m.x1-m.x0>=2&&m.y1-m.y0>=2)rect=m;}
+var fw=rect.x1-rect.x0,fh=rect.y1-rect.y0;
+if(fw<1)fw=1;if(fh<1)fh=1;
+var sc=o.scale|0;if(sc<1)sc=1;
+var maxDim=4096;if(fw*sc>maxDim||fh*sc>maxDim){sc=Math.max(1,Math.floor(Math.min(maxDim/fw,maxDim/fh)));}
+var c=document.createElement('canvas');c.width=fw*sc;c.height=fh*sc;
+var ctx=c.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
+var sc2=document.createElement('canvas');sc2.width=fw;sc2.height=fh;
+var sctx=sc2.getContext('2d',{willReadFrequently:true});sctx.imageSmoothingEnabled=false;
+var modeRem=o.bgMode||'flood';
+var keyRGB=null;
+if(modeRem==='key'){if(!bgi.transparent)keyRGB=bgi.color;}
+else if(modeRem==='color'){keyRGB=hexToInt(o.bgColor);}
+var kt2=o.thr*o.thr;
+var customMask=null;
+if(modeRem==='color'){customMask=floodMask(data,W,H,keyRGB,o.thr);if(o.cleanup)customMask=applyCleanup(customMask,data,W,H,keyRGB,o.thr);}
+var rmMask=(modeRem==='flood')?mask:(modeRem==='color'?customMask:null);
+var frames=[],colorSet=new Map(),hasAlpha=false;
+var ord=orderIdx(cells.length,o.order);
+for(var oi=0;oi<ord.length;oi++){
+var cell=cells[ord[oi]];
+sctx.clearRect(0,0,fw,fh);
+sctx.drawImage(img,cell.x+rect.x0,cell.y+rect.y0,fw,fh,0,0,fw,fh);
+var d=sctx.getImageData(0,0,fw,fh).data;
+var py,px2,ii,gx,gy;
+if(rmMask){
+for(py=0;py<fh;py++){gy=cell.y+rect.y0+py;var rowOff=gy*W;
+for(px2=0;px2<fw;px2++){gx=cell.x+rect.x0+px2;
+if(rmMask[rowOff+gx]===1){ii=(py*fw+px2)*4;d[ii+3]=0;}}}
+}
+else if(modeRem==='key'&&keyRGB){
+var kr=(keyRGB>>16)&255,kg=(keyRGB>>8)&255,kb=keyRGB&255;
+for(var pp=0;pp<d.length;pp+=4){if(d[pp+3]<16)continue;var dr=d[pp]-kr,dg=d[pp+1]-kg,db=d[pp+2]-kb;if(dr*dr+dg*dg+db*db<=kt2)d[pp+3]=0;}
+}
+for(var q=0;q<d.length;q+=4){if(d[q+3]<128){hasAlpha=true;continue;}var kk=(d[q]<<16)|(d[q+1]<<8)|d[q+2];if(!colorSet.has(kk))colorSet.set(kk,1);}
+sctx.putImageData(new ImageData(d,fw,fh),0,0);
+ctx.clearRect(0,0,c.width,c.height);
+ctx.drawImage(sc2,0,0,fw,fh,0,0,c.width,c.height);
+frames.push(ctx.getImageData(0,0,c.width,c.height).data);
+}
+var maxColors=hasAlpha?255:256;
+var pal=null,pi;
+if(colorSet.size<=maxColors){pal=[];colorSet.forEach(function(v,k){pal.push([(k>>16)&255,(k>>8)&255,k&255]);});}
+else{var cnt=0,fi,dd;
+for(fi=0;fi<frames.length;fi++){dd=frames[fi];for(var p3=3;p3<dd.length;p3+=4)if(dd[p3]>=128)cnt++;}
+var buf=new Uint8ClampedArray(cnt*4),oo=0;
+for(fi=0;fi<frames.length;fi++){dd=frames[fi];for(var p4=0;p4<dd.length;p4+=4)if(dd[p4+3]>=128){buf[oo++]=dd[p4];buf[oo++]=dd[p4+1];buf[oo++]=dd[p4+2];buf[oo++]=255;}}
+pal=quant(buf,maxColors);}
+var palTable=pal,tIndex=-1;
+if(hasAlpha){tIndex=pal.length;palTable=pal.concat([[0,0,0]]);}
+var cmap=null;
+if(colorSet.size<=maxColors){cmap=new Map();for(pi=0;pi<pal.length;pi++){cmap.set((pal[pi][0]<<16)|(pal[pi][1]<<8)|pal[pi][2],pi);}}
+var enc=GG();
+var total=c.width*c.height;
+for(var fj=0;fj<frames.length;fj++){
+var df=frames[fj];var idx=new Uint8Array(total);
+if(cmap){for(var pp2=0,qq=0;pp2<df.length;pp2+=4,qq++){var vv=df[pp2+3]<128?(tIndex<0?0:tIndex):cmap.get((df[pp2]<<16)|(df[pp2+1]<<8)|df[pp2+2]);idx[qq]=vv===undefined?0:vv;}}
+else{idx.set(applyP(df,pal));if(tIndex>=0){for(var p5=0,q5=0;p5<df.length;p5+=4,q5++)if(df[p5+3]<128)idx[q5]=tIndex;}}
+var opt={palette:palTable,delay:o.delay,dispose:hasAlpha?2:1};
+if(fj===0&&o.loop)opt.repeat=0;
+if(tIndex>=0){opt.transparent=true;opt.transparentIndex=tIndex;}
+enc.writeFrame(idx,c.width,c.height,opt);}
+enc.finish();
+var bytes=enc.bytes();
+return {blob:new Blob([bytes],{type:'image/gif'}),meta:{w:c.width,h:c.height,frames:frames.length,delay:o.delay,bytes:bytes.length,loop:!!o.loop,keyed:!!rmMask||!!(modeRem==='key'&&keyRGB),bg:bgi,colors:colorSet.size,group:gg.idx,groups:maxG,dir:gg.dir}};}
+
+function updateModeUI(){var m=state.mode,showGrid=(m==='grid');
+$('fieldN').style.display=showGrid?'none':'';
+$('fgR').style.display=showGrid?'':'none';
+$('fgC').style.display=showGrid?'':'none';
+$('fgD').style.display=showGrid?'':'none';}
+function syncUI(){$('mode').value=state.mode;$('n').value=state.n;$('gRows').value=state.gRows;$('gCols').value=state.gCols;$('gDir').value=state.gDir;updateModeUI();}
+function analyze(){
+var img=state.img;if(!img)return;
+var an=getAnalysis();var W=an.W,H=an.H;
+var rc=countsRow(an.maskDet,W,H);
+var cc=countsCol(an.maskDet,W,H);
+var sr=strengthRow(an.maskDet,W,H);var sc2=strengthCol(an.maskDet,W,H);
+var rr=detectRuns(rc,sr,H);var cr2=detectRuns(cc,sc2,W);
+var vR=rr.length,vC=cr2.length;var info='';
+if(vR>=2&&vC>=2){
+if(vR*vC<=400){state.mode='grid';state.gRows=vR;state.gCols=vC;state.gDir='row';state.gIdx=0;info='· 识别为网格：'+vR+' 行 × '+vC+' 列（默认每行一个动画，可切换按列）';
+var hs2=[];for(var hz=0;hz<rr.length;hz++)hs2.push(rr[hz][1]-rr[hz][0]);hs2.sort(function(a,b){return a-b;});var medH=hs2[Math.floor((hs2.length-1)/2)];
+if(hs2[hs2.length-1]>medH*1.5)info=info+' ⚠ 行高不均匀（可能有粘连），请核对预览，可用快捷预设修正';}
+else{info='· 自动识别的行列过多（'+vR+'×'+vC+'），请手动设置行列数';}
+}
+else if(vR>=2){
+if(W>H*0.9&&vC<2){state.mode='grid';state.gRows=vR;state.gCols=3;state.gDir='row';state.gIdx=0;info='⚠ 检测到 '+vR+' 行，但列未分离：已按 '+vR+' 行×3 列 假设，请核对预览';}
+else{state.mode='v';state.n=vR;info='· 识别为单列竖排：'+vR+' 帧';}
+}
+else if(vC>=2){
+if(H>W*0.9&&vR<2){state.mode='grid';state.gRows=4;state.gCols=vC;state.gDir='row';state.gIdx=0;info='⚠ 检测到 '+vC+' 列，但行未分离：已按 4 行×'+vC+' 列 假设，请核对预览';}
+else{state.mode='h';state.n=vC;info='· 识别为单行横排：'+vC+' 帧';}
+}
+else{
+var ratio=W/H;
+if(ratio>0.6&&ratio<0.98&&W>=100&&H>=100){state.mode='grid';state.gRows=4;state.gCols=3;state.gDir='row';state.gIdx=0;info='⚠ 未能自动分离行/列：已按 4 行×3 列 假设，请核对预览；可用快捷预设修正';}
+else if(H>=W*2.4&&H<=W*6){state.mode='v';state.n=4;info='⚠ 未能自动识别：已按 纵向 4 帧 假设，请核对预览（可手动修改帧数）';}
+else if(W>=H*2.4&&W<=H*6){state.mode='h';state.n=4;info='⚠ 未能自动识别：已按 横向 4 帧 假设，请核对预览（可手动修改帧数）';}
+else{info='⚠ 未能自动识别出多帧：请手动设置帧数 / 行数 / 列数';}
+}
+$('detectInfo').textContent=info;
+$('fileInfo').innerHTML='已载入：<b>'+state.name+'</b> · '+W+'×'+H+' 像素'+(window.__shrunk?('（原图 '+window.__shrunk[0]+'×'+window.__shrunk[1]+' 较大，已自动缩小以保证流畅）'):'');
+syncUI();renderGroups();renderFrames();updateAllBtn();updateBatchBtn();
+$('cardFrames').style.display='';}
+function updateGroupCap(){var cap=$('groupCap');if(!cap)return;var img=state.img;if(!img)return;var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;var gg=gridOf(state,W,H);var fr=(gg.dir==='row'?gg.C:gg.R);cap.textContent='当前生成：第 '+(gg.idx+1)+(gg.dir==='row'?' 行':' 列')+'的动画（共 '+fr+' 帧）';}
+function renderGroups(){var wrapEl=$('groupWrap'),box=$('groupBox');if(!wrapEl||!box)return;var img=state.img;
+if(!img||state.mode!=='grid'){wrapEl.style.display='none';return;}
+var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+var gg=gridOf(state,W,H);var cw=Math.floor(W/gg.C),ch=Math.floor(H/gg.R);
+if(cw<1||ch<1){wrapEl.style.display='none';return;}
+var count=gg.dir==='row'?gg.R:gg.C;
+if(state.gIdx>count-1)state.gIdx=count-1;if(state.gIdx<0)state.gIdx=0;
+box.innerHTML='';
+for(var k=0;k<count;k++){
+var cv=document.createElement('canvas');
+if(gg.dir==='row'){var tw=104,th=Math.max(1,Math.round(ch*tw/W));cv.width=tw;cv.height=th;var c2=cv.getContext('2d');c2.imageSmoothingEnabled=false;c2.drawImage(img,0,k*ch,W,ch,0,0,tw,th);}
+else{var th2=104,tw2=Math.max(1,Math.round(cw*th2/H));cv.width=tw2;cv.height=th2;var c3=cv.getContext('2d');c3.imageSmoothingEnabled=false;c3.drawImage(img,k*cw,0,cw,H,0,0,tw2,th2);}
+var el=document.createElement('div');el.className='gsel'+(k===state.gIdx?' on':'');
+el.appendChild(cv);var lab=document.createElement('span');lab.textContent='第 '+(k+1)+(gg.dir==='row'?' 行':' 列');el.appendChild(lab);
+(function(kk){el.addEventListener('click',function(){state.gIdx=kk;renderGroups();renderFrames();updateGroupCap();});})(k);
+box.appendChild(el);}
+wrapEl.style.display='';updateGroupCap();}
+function renderFrames(){var img=state.img;if(!img)return;var strip=$('strip');if(!strip)return;strip.innerHTML='';
+var an=getAnalysis();var W=an.W,H=an.H,mask=an.mask;
+var gg=gridOf(state,W,H);var co=cellsOf(gg,W,H);
+if(!co){var e1=document.createElement('span');e1.className='small';e1.textContent='行列数太大，无法分割：请减小行数或列数';strip.appendChild(e1);return;}
+var cells=co.cells;
+var rect={x0:0,y0:0,x1:co.cw,y1:co.ch};
+if(state.crop){var m=measureCropMask(mask,W,H,cells);if(m.x1-m.x0>=2&&m.y1-m.y0>=2)rect=m;}
+var fw=Math.max(1,rect.x1-rect.x0),fh=Math.max(1,rect.y1-rect.y0);
+var ord=orderIdx(cells.length,state.order);var lim=Math.min(ord.length,24);
+for(var k=0;k<lim;k++){var cell=cells[ord[k]];
+var cv=document.createElement('canvas');cv.width=fw;cv.height=fh;
+var cctx=cv.getContext('2d');cctx.imageSmoothingEnabled=false;
+cctx.drawImage(img,cell.x+rect.x0,cell.y+rect.y0,fw,fh,0,0,fw,fh);
+var box=document.createElement('div');box.className='thumb';box.appendChild(cv);
+var sp=document.createElement('span');sp.textContent=String(k+1);box.appendChild(sp);strip.appendChild(box);}
+updateGroupCap();}
+
+async function gen(){
+var img=state.img;if(!img){$('goInfo').textContent='请先载入图片';return;}
+$('goInfo').textContent='生成中…';
+try{
+var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+if(state.mode==='grid'){var cnt=groupCountOf(state,W,H);if(state.gIdx>cnt-1)state.gIdx=cnt-1;if(state.gIdx<0)state.gIdx=0;}
+var res=await buildGif(img,optsFromState(),null);
+lastBlob=res.blob;
+if(lastUrl)URL.revokeObjectURL(lastUrl);
+lastUrl=URL.createObjectURL(res.blob);
+$('gifImg').src=lastUrl;
+$('cardRes').style.display='';
+var sz=(res.meta.bytes/1024).toFixed(1);
+var tags=[];
+if(res.meta.groups>1&&state.mode==='grid')tags.push('第 '+(res.meta.group+1)+(res.meta.dir==='row'?' 行':' 列')+' / 共 '+res.meta.groups+' 组');
+tags.push(res.meta.w+'×'+res.meta.h+'px');
+tags.push(res.meta.frames+' 帧');
+tags.push(res.meta.delay+'ms/帧');
+tags.push('≈'+(1000/res.meta.delay).toFixed(1)+' 帧/秒');
+tags.push(sz+' KB');
+tags.push(res.meta.loop?'无限循环':'播放一次');
+if(res.meta.keyed)tags.push('背景已去');
+$('resTags').innerHTML=tags.map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
+$('goInfo').textContent='✅ 已生成';
+updateAllBtn();
+}catch(e){$('goInfo').textContent='出错：'+((e&&e.message)||e);}}
+function updateAllBtn(){
+var img=state.img;var btn=$('btnAll');if(!btn)return;
+if(!img||state.mode!=='grid'){btn.style.display='none';return;}
+var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+var count=groupCountOf(state,W,H);
+if(count<=1){btn.style.display='none';return;}
+btn.style.display='';
+btn.textContent='⬇️ 下载全部 '+count+' 个 GIF（每'+(state.gDir==='row'?'行':'列')+'一个）';}
+async function genAll(){
+var img=state.img;if(!img)return;
+var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+var count=groupCountOf(state,W,H);
+if(count<=1)return;
+var btn=$('btnAll');if(btn)btn.disabled=true;
+try{
+for(var k=0;k<count;k++){
+$('goInfo').textContent='批量生成中…（'+(k+1)+'/'+count+'）';
+var res=await buildGif(img,optsFromState(),k);
+_dl(res.blob,state.name+'-第'+(k+1)+(state.gDir==='row'?'行':'列')+'.gif');
+if(k<count-1)await sleep(360);}
+$('goInfo').textContent='✅ 已开始下载 '+count+' 个 GIF（若浏览器询问“是否允许下载多个文件”，请允许）';
+}catch(e){$('goInfo').textContent='出错：'+((e&&e.message)||e);}
+if(btn)btn.disabled=false;}
+async function genAllFiles(){
+if(files.length<2){$('goInfo').textContent='批量导出需要先在文件选择里多选几张图片';return;}
+if(!window.confirm('将为已载入的 '+files.length+' 张图片依次生成“每组一个”的 GIF（使用当前参数）。浏览器可能询问“是否允许多个文件下载”，请选择允许。继续？'))return;
+var btn=$('btnBatch');if(btn)btn.disabled=true;
+var okN=0;var failN=[];
+for(var i=0;i<files.length;i++){
+$('goInfo').textContent='批量处理中…（'+(i+1)+'/'+files.length+'）';
+try{
+if(!(await loadFileIndex(i)))throw new Error('加载失败');
+var img=state.img;if(!img)throw new Error('加载失败');
+var W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+var cnt=groupCountOf(state,W,H);if(cnt<1)cnt=1;
+for(var k=0;k<cnt;k++){
+var res=await buildGif(img,optsFromState(),k);
+var _nm=(cnt>1)?(state.name+'-第'+(k+1)+(state.gDir==='row'?'行':'列')+'.gif'):(state.name+'.gif');_dl(res.blob,_nm);
+await sleep(360);
+}
+okN++;
+}catch(e){failN.push(files[i]&&files[i].name?files[i].name:('#'+(i+1)));}
+}
+if(btn)btn.disabled=false;
+try{await loadFileIndex(0);}catch(e2){}
+$('goInfo').textContent='批量完成：成功 '+okN+' 张'+(failN.length?('，失败 '+failN.length+' 张（'+failN.join('、')+'）'):'');}
+function download(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);}
+var _dl=download;
+
+function buildExportHtml(){var D=window.__exportData||{};var css=D.css||'',body=D.body||'',app=D.app||'',gif=D.gif||'';
+var S='<'+'script',E='<'+'/script>';
+var h='<!doctype html>'+LF+'<html lang="zh-CN">'+LF+'<head>'+LF+'<meta charset="utf-8">'+LF+'<meta name="viewport" content="width=device-width,initial-scale=1">'+LF+'<title>精灵图→GIF工具</title>'+LF+'<style id="g2g-style">'+LF+css+LF+'</style>'+LF+'</head>'+LF+'<body>'+LF+body+LF;
+h+=S+' id="gif-script" type="module">'+LF+gif+LF+E+LF;
+h+=S+' id="boot">window.__exportData=(function(){var st=document.getElementById("g2g-style"),wr=document.querySelector(".wrap"),gs=document.getElementById("gif-script");return{css:st?st.textContent:"",body:wr?wr.outerHTML:"",gif:gs?gs.textContent:"",get app(){var ap=document.getElementById("app-script");return ap?ap.textContent:"";}};})();'+E+LF;
+h+=S+' id="app-script">'+LF+app+LF+E+LF;
+h+=S+'>setTimeout(function(){var d=document.getElementById("jsWarn");if(d&&!window.__app)d.style.display="block";},2500);'+E+LF;
+h+='</body>'+LF+'</html>';
+return h;}
+function exportTool(){try{var html=buildExportHtml();download(new Blob([html],{type:'text/html;charset=utf-8'}),'精灵图转GIF工具.html');}catch(e){alert('导出失败：'+((e&&e.message)||e));}}
+
+async function loadFiles(list){var _now=Date.now();if(window.__lastLoad&&_now-window.__lastLoad<300)return;window.__lastLoad=_now;files=[];var i;for(i=0;i<list.length;i++){var f=list[i];if(!f)continue;var _t=(f.type||'').toLowerCase();var _n=(f.name||'').toLowerCase();var _d2=_n.lastIndexOf('.');var _ext=_d2>=0?_n.slice(_d2+1):'';var _ok=(_t.indexOf('image/')===0)||(_ext==='png'||_ext==='jpg'||_ext==='jpeg'||_ext==='gif'||_ext==='webp'||_ext==='bmp'||_ext==='avif'||_ext==='heic'||_ext==='heif')||(_t===''&&_ext==='')||_t==='application/octet-stream';if(_ok)files.push(f);}
+if(!files.length){$('goInfo').textContent='没有识别到图片文件，请重新选择';return;}
+curFile=0;renderChips();for(var _j=0;_j<files.length;_j++){if(await loadFileIndex(_j))return;}$('fileInfo').textContent='所选文件都无法读取，请换 PNG / JPG 试试';}
+async function loadFileIndex(i){curFile=i;renderChips();var f=files[i];if(!f)return;
+var nm=f.name||'animation';var dot=nm.lastIndexOf('.');if(dot>0)nm=nm.slice(0,dot);state.name=nm;
+var u=URL.createObjectURL(f);
+try{var img=await loadImageFromURL(u);state.img=img;}catch(err){$('fileInfo').textContent='图片加载失败：'+(f.name||'')+'，可转存为 PNG / JPG 再试';return false;}
+if(window.__imgUrl)URL.revokeObjectURL(window.__imgUrl);window.__imgUrl=u;
+var _dwm=img.naturalWidth||img.width,_dmh=img.naturalHeight||img.height;var _dsc=1;
+if(_dwm>4096||_dmh>4096)_dsc=Math.min(4096/_dwm,4096/_dmh);
+if(_dwm*_dmh*_dsc*_dsc>12000000)_dsc=Math.min(_dsc,Math.sqrt(12000000/(_dwm*_dmh)));
+if(_dsc<0.999){var _dcv=document.createElement('canvas');var _dcw=Math.max(1,Math.round(_dwm*_dsc)),_dch=Math.max(1,Math.round(_dmh*_dsc));_dcv.width=_dcw;_dcv.height=_dch;var _dcx=_dcv.getContext('2d');_dcx.imageSmoothingEnabled=true;try{_dcx.imageSmoothingQuality='high';}catch(_deq){}_dcx.drawImage(img,0,0,_dcw,_dch);state.img=_dcv;window.__shrunk=[_dwm,_dmh,_dcw,_dch];}else{window.__shrunk=null;}
+$('cardRes').style.display='none';$('goInfo').textContent='';try{analyze();}catch(_da){$('fileInfo').textContent='处理失败（图片过大或格式特殊）：'+((_da&&_da.message)||_da);}return true;}
+function renderChips(){var box=$('chips');if(!box)return;updateBatchBtn();if(files.length<=1){box.style.display='none';box.innerHTML='';return;}
+box.style.display='';box.innerHTML='';
+for(var i=0;i<files.length;i++){var el=document.createElement('span');el.className='chip'+(i===curFile?' on':'');el.textContent=files[i].name;
+(function(ii){el.addEventListener('click',function(){loadFileIndex(ii);});})(i);
+box.appendChild(el);}}
+function updateBatchBtn(){var b=$('btnBatch');if(!b)return;b.style.display=(files.length>=2)?'':'none';}
+function loadSample(){
+var CW=60,CH=60,R=4,C=3;
+var cv=document.createElement('canvas');cv.width=CW*C;cv.height=CH*R;
+var g=cv.getContext('2d');
+g.fillStyle='#ffffff';g.fillRect(0,0,cv.width,cv.height);
+var hues=['#f3cfe8','#cfe3f3','#d9f3cf','#f3e5cf'];
+for(var r=0;r<R;r++){for(var c=0;c<C;c++){
+var cx=c*CW+CW/2,cy=r*CH+CH/2;
+var ph=c*1.1;var oy=Math.round(Math.sin(ph)*2);
+g.lineWidth=1;g.strokeStyle='#7a4a6a';g.fillStyle=hues[r];
+g.beginPath();g.moveTo(cx-6,cy+oy-12);g.lineTo(cx-11,cy+oy-21);g.lineTo(cx-1,cy+oy-13);g.closePath();g.fill();g.stroke();
+g.beginPath();g.moveTo(cx+2,cy+oy-13);g.lineTo(cx+11,cy+oy-21);g.lineTo(cx+10,cy+oy-12);g.closePath();g.fill();g.stroke();
+g.beginPath();g.ellipse(cx,cy+oy-2,13,12,0,0,Math.PI*2);g.fill();g.stroke();
+g.fillStyle='#3a3a44';g.fillRect(cx-4,cy+oy-5,2,3);g.fillRect(cx+2,cy+oy-5,2,3);
+g.fillStyle='#e58cc8';g.beginPath();g.ellipse(cx+8,cy+oy+2,3,2,0,0,Math.PI*2);g.fill();
+g.fillStyle='#d9a7cc';var l1=3+Math.round(Math.sin(ph)*2),l2=3-Math.round(Math.sin(ph)*2);
+g.fillRect(cx-8,cy+oy+10,4,6+l1);g.fillRect(cx+4,cy+oy+10,4,6+l2);
+}}
+files=[];renderChips();
+state.img=cv;state.name='sample';
+$('cardRes').style.display='none';$('goInfo').textContent='';
+analyze();}
+function bind(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn);}
+bind('drop','click',function(){$('file').click();});
+['dragenter','dragover'].forEach(function(ev){bind('drop',ev,function(e){e.preventDefault();e.stopPropagation();$('drop').classList.add('over');});});
+bind('drop','dragleave',function(e){e.preventDefault();$('drop').classList.remove('over');});
+bind('drop','drop',async function(e){e.preventDefault();e.stopPropagation();$('drop').classList.remove('over');var fl=e.dataTransfer&&e.dataTransfer.files;if(fl&&fl.length)await loadFiles(fl);});
+document.addEventListener('dragover',function(e){e.preventDefault();});
+document.addEventListener('drop',function(e){e.preventDefault();var fl=e.dataTransfer&&e.dataTransfer.files;if(fl&&fl.length)loadFiles(fl);});
+document.addEventListener('paste',function(e){var it=e.clipboardData&&e.clipboardData.items;if(!it)return;var arr=[];for(var i=0;i<it.length;i++){var t=it[i].type||'';if(t.indexOf('image/')===0){var f=it[i].getAsFile();if(f)arr.push(f);}}if(arr.length){e.preventDefault();loadFiles(arr);}});
+bind('file','change',function(){var fl=[];var fs=this.files||[];for(var _ci=0;_ci<fs.length;_ci++)fl.push(fs[_ci]);this.value='';if(fl.length)loadFiles(fl);});
+bind('btnSample','click',loadSample);
+bind('btnBatch','click',genAllFiles);
+bind('btnRedetect','click',function(){$('goInfo').textContent='';try{analyze();}catch(_db){$('goInfo').textContent='处理失败：'+((_db&&_db.message)||_db);}});
+bind('presets','click',function(e){
+var t=e.target||{};var p=t.getAttribute?t.getAttribute('data-preset'):null;if(!p)return;
+if(p==='g43'){state.mode='grid';state.gRows=4;state.gCols=3;state.gDir='row';state.gIdx=0;}
+else if(p==='g44'){state.mode='grid';state.gRows=4;state.gCols=4;state.gDir='row';state.gIdx=0;}
+else if(p==='h3'){state.mode='h';state.n=3;}
+else if(p==='v4'){state.mode='v';state.n=4;}
+syncUI();renderGroups();renderFrames();});
+bind('mode','change',function(){state.mode=this.value;updateModeUI();renderGroups();renderFrames();});
+bind('n','change',function(){var v=parseInt(this.value,10);if(isNaN(v)||v<1)v=1;if(v>128)v=128;state.n=v;this.value=v;renderFrames();});
+bind('gRows','change',function(){var v=parseInt(this.value,10);if(isNaN(v)||v<1)v=1;if(v>64)v=64;state.gRows=v;this.value=v;renderGroups();renderFrames();});
+bind('gCols','change',function(){var v=parseInt(this.value,10);if(isNaN(v)||v<1)v=1;if(v>64)v=64;state.gCols=v;this.value=v;renderGroups();renderFrames();});
+bind('gDir','change',function(){state.gDir=this.value;state.gIdx=0;renderGroups();renderFrames();});
+bind('delay','input',function(){state.delay=parseInt(this.value,10)||120;$('delayOut').textContent=state.delay+'ms ≈ '+(1000/state.delay).toFixed(1)+' 帧/秒';});
+bind('scale','change',function(){state.scale=parseInt(this.value,10)||4;});
+bind('bgMode','change',function(){state.bgMode=this.value;$('fieldColor').style.display=this.value==='color'?'':'none';});
+bind('bgColor','input',function(){state.bgColor=this.value;});
+bind('thr','input',function(){state.thr=parseInt(this.value,10)||0;$('thrOut').textContent=state.thr;});
+bind('order','change',function(){state.order=this.value;renderFrames();});
+bind('crop','change',function(){state.crop=this.checked;renderFrames();});
+bind('loop','change',function(){state.loop=this.checked;});
+bind('cleanup','change',function(){state.cleanup=this.checked;});
+bind('btnGo','click',gen);
+bind('btnDl','click',function(){if(lastBlob)_dl(lastBlob,state.name+'.gif');});
+bind('btnAll','click',genAll);
+bind('lnkExport','click',function(e){e.preventDefault();exportTool();});
+$('delayOut').textContent=state.delay+'ms ≈ '+(1000/state.delay).toFixed(1)+' 帧/秒';
+updateModeUI();
+window.__app={state:state,loadFiles:loadFiles,loadFileIndex:loadFileIndex,sample:loadSample,gen:gen,genAll:genAll,genAllFiles:genAllFiles,analyze:analyze,renderFrames:renderFrames,renderGroups:renderGroups,updateGroupCap:updateGroupCap,buildGif:buildGif,optsFromState:optsFromState,groupCountOf:groupCountOf,exportHtml:buildExportHtml,_setDownload:function(fn){_dl=fn;},getLastBlob:function(){return lastBlob;},_runs:function(){var an=getAnalysis();var rc=countsRow(an.maskDet,an.W,an.H);var cc=countsCol(an.maskDet,an.W,an.H);var sr=strengthRow(an.maskDet,an.W,an.H);var sc3=strengthCol(an.maskDet,an.W,an.H);return {rowRuns:detectRuns(rc,sr,an.H),colRuns:detectRuns(cc,sc3,an.W)};},_maskAt:function(x,y){var an=getAnalysis();return an.mask[y*an.W+x];},_analysis:function(){var an=getAnalysis();return {W:an.W,H:an.H,bgi:an.bgi};}};
+</script>
+<script>setTimeout(function(){var d=document.getElementById("jsWarn");if(d&&!window.__app)d.style.display="block";},2500);</script>
+</body>
+</html>
