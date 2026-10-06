@@ -261,10 +261,10 @@ class App:
                  font=("Microsoft YaHei", 10), justify="left").pack(padx=20, pady=(14, 6), anchor="w")
         v1 = tk.BooleanVar(value=False); v2 = tk.BooleanVar(value=False)
         if del_dirs:
-            tk.Checkbutton(d, text="删除图片型 PDF（%d 个，位于 The PDF by Pitcure）" % len(del_files),
+            tk.Checkbutton(d, text="删除图片文件夹（%d 个，位于输出目录 pdf-to-png）" % len(del_dirs),
                            variable=v1, font=("Microsoft YaHei", 10)).pack(anchor="w", padx=20, pady=2)
         if del_files:
-            tk.Checkbutton(d, text="删除图片型 PDF（%d 个，位于 The PDF by Pitcure）" % len(del_files),
+            tk.Checkbutton(d, text="删除图片型 PDF（%d 个，位于输出目录 img-to-pdf）" % len(del_files),
                            variable=v2, font=("Microsoft YaHei", 10)).pack(anchor="w", padx=20, pady=2)
         f = tk.Frame(d); f.pack(pady=10)
         def ok_cb():

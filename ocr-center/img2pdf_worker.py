@@ -24,7 +24,7 @@ def main():
         files.sort()
     if not files:
         log("[错误] 该文件夹里没有图片"); sys.exit(1)
-        os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(OUT_DIR, exist_ok=True)
     from PIL import Image
     imgs = []
     for f in files:

@@ -6,7 +6,7 @@ FolderLauncher —— 文件夹快捷启动器（Windows）
 可选依赖（启用拖拽添加功能）：pip install tkinterdnd2
 打包（便于固定到任务栏/开始菜单）：
     pip install pyinstaller
-    pyinstaller --onefile --windowed --clean --name FolderLauncher FolderLauncher.py
+    pyinstaller --onefile --windowed --clean --name FolderLauncher folder_launcher.py
     （若装了 tkinterdnd2，追加：--collect-all tkinterdnd2）
 """
 import json
