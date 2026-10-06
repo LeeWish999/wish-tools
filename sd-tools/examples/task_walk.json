@@ -1,0 +1,12 @@
+{
+  "prompt": "<lora:pixel sprites:0.8>, 2d Pixel Art, sprite style, 1girl, black hair, school uniform, full body, whole body visible, head to toe, standing, centered, large character, flat solid empty background, transparent background, best quality",
+  "negative_prompt": "lowres, bad anatomy, blurry, watermark, text, signature, extra limbs, deformed, jpeg artifacts, low quality, worst quality, cropped, cut off, out of frame, partial body, head cut off, feet cut off, close-up, upper body, zoomed in, ring, circle, circular frame, ring border, halo, magic circle, emblem, badge, vignette, spotlight, circular background, medal, coin",
+  "steps": 30,
+  "width": 512,
+  "height": 512,
+  "cfg_scale": 7,
+  "sampler_name": "DPM++ 2M",
+  "batch_size": 3,
+  "seed": 888,
+  "save_prefix": "walk_v3"
+}

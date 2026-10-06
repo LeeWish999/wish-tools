@@ -1,0 +1,12 @@
+{
+  "prompt": "<lora:pixel sprites:0.8>, 2d Pixel Art, sprite style, 16-bit pixel art, old wooden school desk, ((front view:1.4)), orthographic, flat, straight-on angle, single object, full object visible, game asset, rpg maker mv object, solid magenta background, flat color, no gradient, best quality",
+  "negative_prompt": "lowres, bad anatomy, blurry, watermark, text, signature, jpeg artifacts, low quality, worst quality, cropped, cut off, out of frame, isometric, perspective, 3d render, axonometric, 3/4 view, top-down view, bird's eye view, tilted, oblique, vanishing point, depth, floor, room, wall, scenery, multiple objects, vignette, gradient background, people, characters",
+  "steps": 30,
+  "width": 512,
+  "height": 512,
+  "cfg_scale": 7,
+  "sampler_name": "DPM++ 2M",
+  "batch_size": 4,
+  "seed": -1,
+  "save_prefix": "tile_desk"
+}

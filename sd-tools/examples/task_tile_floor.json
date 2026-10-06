@@ -1,0 +1,13 @@
+{
+  "prompt": "<lora:16-bit_pixel_background_SD1.5:0.8>, apxlz, 16-bit pixel art, top-down view, dark aged wooden floor planks, simple repeating pattern, flat colors, low detail, seamless tileable texture, muted desaturated colors, horror atmosphere, game asset, best quality",
+  "negative_prompt": "lowres, blurry, watermark, text, signature, jpeg artifacts, low quality, worst quality, perspective, isometric, 3d render, vignette, grain, noise, busy, cluttered, photorealistic, objects, furniture, people, characters, border, frame",
+  "steps": 50,
+  "width": 768,
+  "height": 768,
+  "cfg_scale": 7,
+  "sampler_name": "DPM++ 2M",
+  "batch_size": 4,
+  "seed": -1,
+  "tiling": true,
+  "save_prefix": "tile_floor"
+}

@@ -167,7 +167,7 @@ setx OCR_OUT_ROOT "D:\ocr-output"
 
 | 现象 | 处理 |
 | --- | --- |
-| 双击 `.pyw` 没反应 | 右键 → 打开方式 → 选择 `pythonw.exe`；或先在 cmd 里运行 `.venv\Scripts\pythonw.exe ocr_center.pyw` 查看报错 |
+| 双击 `.pyw` 没反应 | 右键 → 打开方式 → 选择 `pythonw.exe`；或先在 cmd 里运行 `.venv\Scripts\python.exe ocr_center.pyw`（要用 python.exe 才会显示报错信息） |
 | 日志提示 `[错误] 未找到可用的 python.exe` | 回到第 7 节：把 `.venv` 建在工具文件夹里，或设置 `OCR_PYTHON` |
 | 日志提示 `缺少脚本` | 7 个文件没放全，对照第 0 节表格 |
 | `import paddlex` 报错 / 找不到模块 | PaddleX 没装进 `.venv`：`.venv\Scripts\python.exe -m pip install "paddlex[ocr]"` 重装 |
