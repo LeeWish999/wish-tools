@@ -8,6 +8,8 @@
 | --- | --- | --- |
 | `sprite2gif.html` | 精灵图（动作分解图）→ GIF 工具 | 站内提供在线版 |
 | `periodic_table.py` | A3 元素周期表生成器（可打印） | 下载后本地运行 |
+| `folder_launcher.py` | 文件夹快捷启动器（Windows 小工具） | 下载后本地运行 |
+| `folder_launcher.py` | 文件夹快捷启动器（Windows） | 下载后本地运行 |
 
 ## sprite2gif.html —— 精灵图转 GIF 工具
 
@@ -29,6 +31,20 @@
 - 用法：`python periodic_table.py`，脚本同目录生成 `periodic_table_A3.pdf` 与 `.png`
 - 打印：A3 横向、缩放 100%、彩色
 - 中文名自动匹配系统字体；如个别字缺字形，可安装 Noto Sans CJK
+
+## folder_launcher.py —— 文件夹快捷启动器
+
+把常用文件夹收进一个小窗口：单击即开，再也不用一层层翻路径（Windows）。
+
+- 主界面是一列文件夹按钮，单击即在资源管理器打开；「＋ 添加文件夹」选择目录，「按名称排序」一键整理
+- 装了可选组件 tkinterdnd2 还能直接把文件夹拖进窗口（`pip install tkinterdnd2`）
+- 右键快捷方式：打开 / 重命名（仅改显示名）/ 复制路径 / 删除（不会删除磁盘上的文件夹）
+- 数据保存在 `folders.json`：优先放 exe 同目录（整个文件夹拷贝即携带）；目录不可写时自动退回 `%APPDATA%`
+- 依赖：Python 自带 tkinter，无需安装
+- 用法：`python folder_launcher.py`
+- 打包：先 `pip install pyinstaller`，再 `pyinstaller --onefile --windowed --clean --name FolderLauncher folder_launcher.py`（装了 tkinterdnd2 追加 `--collect-all tkinterdnd2`），成品可固定到任务栏 / 开始菜单
+
+
 
 ## 说明
 
