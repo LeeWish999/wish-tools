@@ -9,6 +9,7 @@
 | `sprite2gif.html` | 精灵图（动作分解图）→ GIF 工具 | 站内提供在线版 |
 | `periodic_table.py` | A3 元素周期表生成器（可打印） | 下载后本地运行 |
 | `folder_launcher.py` | 文件夹快捷启动器（Windows 小工具） | 下载后本地运行 |
+| `ocr-center/` | 书籍数字化工具集（PDF↔图片、OCR 转 Markdown） | 下载后本地运行 |
 
 ## sprite2gif.html —— 精灵图转 GIF 工具
 
@@ -43,7 +44,19 @@
 - 用法：`python folder_launcher.py`
 - 打包：先 `pip install pyinstaller`，再 `pyinstaller --onefile --windowed --clean --name FolderLauncher folder_launcher.py`（装了 tkinterdnd2 追加 `--collect-all tkinterdnd2`），成品可固定到任务栏 / 开始菜单
 
+## ocr-center/ —— 书籍数字化工具集
 
+把纸质书 / 扫描版 PDF 变成可编辑文稿的一套 Windows 小工具：PDF 与图片互转、OCR 转 Markdown（公式、表格、版面尽量保留）。
+
+- 「OCR 中心」`ocr_center.pyw`：图形界面一站式完成 —— ① PDF→图片 ② 图片→PDF ③ OCR→Markdown ④ 全自动流水线（单个 / 批量均可）
+- 三个 worker 脚本：`pdf2png_worker.py`、`img2pdf_worker.py`、`ocr_worker.py`（界面与 .bat 都调用它们，也可单独命令行使用）
+- 三个快捷入口：`pdf_to_png.bat`、`img_to_pdf.bat`、`ocr_latex.bat`（命令行菜单，不想开图形界面时用）
+- 输出统一到本文件夹的 `output\`：分 `pdf-to-png` / `img-to-pdf` / `ocr` 三个子文件夹；可用环境变量 `OCR_OUT_ROOT` 更换位置
+- 解释器查找顺序：环境变量 `OCR_PYTHON` → 本文件夹下 `.venv` / `venv` → 系统 Python
+- 安装：`pip install pypdfium2 pillow python-docx`；OCR 功能另需 PaddleX（PaddleOCR-VL 产线，首次运行自动下载模型，建议 NVIDIA 显卡环境）
+- 用法：下载本文件夹 → 在装好依赖的环境中双击 `ocr_center.pyw`
+- 提示：OCR 推理比较吃显存，运行前建议退出其它占用显存的程序
+- 从零安装教程（Python / PaddleX 配置全流程）：[ocr-center/install_guide.md](ocr-center/install_guide.md)
 
 ## 说明
 
