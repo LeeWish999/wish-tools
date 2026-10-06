@@ -10,6 +10,7 @@
 | `periodic_table.py` | A3 元素周期表生成器（可打印） | 下载后本地运行 |
 | `folder_launcher.py` | 文件夹快捷启动器（Windows 小工具） | 下载后本地运行 |
 | `ocr-center/` | 书籍数字化工具集（PDF↔图片、OCR 转 Markdown） | 下载后本地运行 |
+| `sd-tools/` | SD 素材工具链（RPG Maker 像素素材） | 下载后本地运行 |
 
 ## sprite2gif.html —— 精灵图转 GIF 工具
 
@@ -57,6 +58,18 @@
 - 用法：下载本文件夹 → 在装好依赖的环境中双击 `ocr_center.pyw`
 - 提示：OCR 推理比较吃显存，运行前建议退出其它占用显存的程序
 - 从零安装教程（Python / PaddleX 配置全流程）：[ocr-center/install_guide.md](ocr-center/install_guide.md)
+
+## sd-tools/ —— SD 素材工具链
+
+面向 RPG Maker 像素素材的一套本地 AI 生产工具链：文生图 / 重绘 / 草图法出图，去底、拼装、质检一条龙，配套完整风格库文档。个人项目，开发中途暂停；已完成工具链可独立复用。
+
+- 生成三件：`sd_gen.py`（文生图）、`sd_img2img.py`（参考图重绘）、`sd_cn.py`（ControlNet 草图法，跑完自动存 info.json 可验证）
+- 行走图线：`chroma_remove.py` / `remove_bg.py`（去底）、`fill_holes.py`（补洞）、`make_sheet.py`（拼 3×4 行走图，48 / 96px）
+- 图块线：`tile_pack.py`（拼 768×768 图块表）、`tile_quant.py`（限量色）、`tile_qa.py`（逐格体检）、`tile_zoom.py`（格子放大目检）
+- 风格库 `style_guide.md`：底模 / LoRA 分工、提示词与参数基准、三大生产流程、质检体系与踩坑记录（建议先读）
+- `examples/`：4 份任务模板（行走 / 高清行走 / 纹理 / 物件）＋ 草图范例 `sketch_desk.png`
+- 依赖：Python（`pip install pillow requests`）；出图脚本需本地 Stable Diffusion WebUI（A1111 / 绘世）保持运行、开启 API（`http://127.0.0.1:7860`），草图法另需对应 ControlNet 模型
+- 用法：`python sd_gen.py examples/task_tile_desk.json --out 输出目录`；完整流程见 [sd-tools/style_guide.md](sd-tools/style_guide.md)
 
 ## 说明
 
