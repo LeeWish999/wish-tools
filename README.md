@@ -9,7 +9,6 @@
 | `sprite2gif.html` | 精灵图（动作分解图）→ GIF 工具 | 站内提供在线版 |
 | `periodic_table.py` | A3 元素周期表生成器（可打印） | 下载后本地运行 |
 | `folder_launcher.py` | 文件夹快捷启动器（Windows 小工具） | 下载后本地运行 |
-| `folder_launcher.py` | 文件夹快捷启动器（Windows） | 下载后本地运行 |
 
 ## sprite2gif.html —— 精灵图转 GIF 工具
 
