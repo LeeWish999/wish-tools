@@ -11,6 +11,7 @@
 | `folder_launcher.py` | 文件夹快捷启动器（Windows 小工具） | 下载后本地运行 |
 | `ocr-center/` | 书籍数字化工具集（PDF↔图片、OCR 转 Markdown） | 下载后本地运行 |
 | `sd-tools/` | SD 素材工具链（RPG Maker 像素素材） | 下载后本地运行 |
+| `folder_size.bat` | 文件夹大小排序器（Windows） | 下载后本地运行 |
 
 ## sprite2gif.html —— 精灵图转 GIF 工具
 
@@ -70,6 +71,17 @@
 - `examples/`：4 份任务模板（行走 / 高清行走 / 纹理 / 物件）＋ 草图范例 `sketch_desk.png`
 - 依赖：Python（`pip install pillow requests`）；出图脚本需本地 Stable Diffusion WebUI（A1111 / 绘世）保持运行、开启 API（`http://127.0.0.1:7860`），草图法另需对应 ControlNet 模型
 - 用法：`python sd_gen.py examples/task_tile_desk.json --out 输出目录`；完整流程见 [sd-tools/style_guide.md](sd-tools/style_guide.md)
+
+## folder_size.bat —— 文件夹大小排序器
+
+把任意文件夹里的子文件夹按占用空间从大到小排出来，清理磁盘时先拿它找出「大头」（Windows）。
+
+- 双击运行 = 统计本文件所在的文件夹；把目标文件夹拖到 .bat 上 = 统计它
+- 实时显示扫描进度；权限不足、读不全的目录会在「备注」列标出来，不漏不瞒
+- 用系统自带 robocopy 快速统计，异常时自动降级重扫，几十万文件的大目录也能扛
+- 零依赖、免安装：Windows 10 / 11 自带组件直接运行，不需要 Python
+- 建议右键「以管理员身份运行」，结果更完整（系统保护目录除外）
+- 用法示例：复制到 `C:\Users\你的用户名` 下双击，一眼看清哪块最占地方
 
 ## 说明
 
