@@ -3,24 +3,24 @@ setlocal
 set "TARGET=%~1"
 if "%TARGET%"=="" set "TARGET=%CD%"
 
-echo ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½: %TARGET%
-echo ï¿½ï¿½Ê¾: ï¿½ï¿½ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ñ¡ï¿½ï¿½"ï¿½Ô¹ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½ò²¿·ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Í³ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+echo ÕýÔÚÍ³¼Æ: %TARGET%
+echo ÌáÊ¾: ½¨ÒéÓÒ¼ü±¾ÎÄ¼þÑ¡Ôñ"ÒÔ¹ÜÀíÔ±Éí·ÝÔËÐÐ"£¬·ñÔò²¿·ÖÎÄ¼þ¼ÐÖ»ÄÜÍ³¼Æµ½²¿·ÖÄÚÈÝ
 echo.
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$base = $env:TARGET;" ^
   "$dirs = Get-ChildItem -LiteralPath $base -Directory -Force -ErrorAction SilentlyContinue;" ^
   "$rows = foreach ($dir in $dirs) {" ^
-  "  Write-Host ('  [É¨ï¿½ï¿½] ' + $dir.Name);" ^
+  "  Write-Host ('  [É¨Ãè] ' + $dir.Name);" ^
   "  $bytes = 0; $failed = 0; $note = '';" ^
   "  $log = @(robocopy $dir.FullName NULL /L /S /NJH /BYTES /NC /NDL /NFL /NP /XJ /R:0 /W:0 /MT:16 2>&1);" ^
   "  $numRow = $log | Where-Object { $_ -match '^[^:]*:\s*[\d\s]+\s*$' } | Select-Object -Last 1;" ^
   "  if ($numRow) { $nums = (($numRow -split ':')[1] -split '\s+') | Where-Object { $_ -ne '' }; $bytes = [int64]$nums[0]; if ($nums.Count -gt 4) { $failed = [int64]$nums[4] } };" ^
-  "  if (-not $numRow) { $note = 'ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¨ï¿½ï¿½'; $errs = @(); $bytes = (Get-ChildItem -LiteralPath $dir.FullName -Recurse -File -Force -ErrorAction SilentlyContinue -ErrorVariable +errs | Measure-Object Length -Sum).Sum; if ($null -eq $bytes) { $bytes = 0 }; if ($errs.Count -gt 0) { $note = 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½' } }" ^
-  "  elseif ($failed -gt 0) { $note = 'ï¿½ï¿½Î´Í³ï¿½ï¿½(È¨ï¿½ï¿½)' };" ^
-  "  [PSCustomObject]@{ Name=$dir.Name; GB=[math]::Round($bytes/1GB,3); MB=[math]::Round($bytes/1MB,2); Bytes=$bytes; ï¿½ï¿½×¢=$note }" ^
+  "  if (-not $numRow) { $note = '½âÎöÊ§°Ü-ÒÑÓÃÂýËÙÉ¨Ãè'; $errs = @(); $bytes = (Get-ChildItem -LiteralPath $dir.FullName -Recurse -File -Force -ErrorAction SilentlyContinue -ErrorVariable +errs | Measure-Object Length -Sum).Sum; if ($null -eq $bytes) { $bytes = 0 }; if ($errs.Count -gt 0) { $note = '²¿·ÖÎÞÈ¨ÏÞ' } }" ^
+  "  elseif ($failed -gt 0) { $note = 'ÓÐÎ´Í³¼Æ(È¨ÏÞ)' };" ^
+  "  [PSCustomObject]@{ Name=$dir.Name; GB=[math]::Round($bytes/1GB,3); MB=[math]::Round($bytes/1MB,2); Bytes=$bytes; ±¸×¢=$note }" ^
   "};" ^
-  "$rows | Sort-Object Bytes -Descending | Select-Object Name,GB,MB,ï¿½ï¿½×¢ | Format-Table -AutoSize;" ^
-  "Write-Host ''; Write-Host ('ï¿½ï¿½ {0} ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½' -f $rows.Count)"
+  "$rows | Sort-Object Bytes -Descending | Select-Object Name,GB,MB,±¸×¢ | Format-Table -AutoSize;" ^
+  "Write-Host ''; Write-Host ('¹² {0} ¸öÎÄ¼þ¼Ð' -f $rows.Count)"
 
 pause
